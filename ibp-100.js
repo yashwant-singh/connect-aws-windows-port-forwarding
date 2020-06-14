@@ -6,11 +6,16 @@ const ursa = require('ursa');
 const {promisify} = require('util');
 const {exec} = require('child_process');
 const execAsync = promisify(exec);
-const prompt = require('prompt-sync')();
-AWS.config.update({region: 'us-west-2'}); 
+const prompt = require('prompt-sync')({sigint: true});
 
-const credentials = new AWS.SharedIniFileCredentials({profile: 'id_rsa_olympus'});
-AWS.config.credentials = credentials;
+AWS.config.update({
+  region: 'us-west-2'
+  // credentials: new AWS.SharedIniFileCredentials({profile: 'id_rsa_olympus'})
+});
+
+
+// const credentials = new AWS.SharedIniFileCredentials({profile: 'id_rsa_olympus'});
+// AWS.config.credentials = credentials;
 /*
 
 */
@@ -39,7 +44,7 @@ const getInstanceDetails = instanceId => {
 const printInstancePassword = instanceId => {
   try {
     console.log("Generating Password...")
-    const pem = fs.readFileSync(process.env.IBP_100);
+    const pem = fs.readFileSync(process.env.IBP_100_PEM_FILE);
     const pkey = ursa.createPrivateKey(pem);
     const ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
     ec2.getPasswordData({InstanceId: instanceId}, (err, data)=> {
@@ -97,18 +102,19 @@ const  getAWSToken = async () => {
 }
 
 const main = () => {
-    console.log("Connecting IBP-100 AWS Account...")
-    const isToken = prompt("Hit Enter for No. Do you want to generate token?[Y]")
-    if(isToken && isToken.toUpperCase() === "Y") {
-      getAWSToken()
-    }
-    const instanceId = prompt('Enter Instance ID:?');
-    console.log("INSTANCE_ID: "+ instanceId)
-    if(!instanceId) {
-      console.log("Please enter the Instance Id!")
-    }
-    printInstancePassword(instanceId)
-    getInstanceDetails(instanceId)
+  process.env.AWS_PROFILE='id_rsa_olympus'
+  console.log("Connecting IBP-100 AWS Account...")
+  const isToken = prompt("Hit Enter for No. Do you want to generate token?[Y]")
+  if(isToken && isToken.toUpperCase() === "Y") {
+    getAWSToken()
+  }
+  const instanceId = prompt('Enter Instance ID :');
+  console.log("INSTANCE_ID: "+ instanceId)
+  if(!instanceId) {
+    console.log("Please enter the Instance Id!")
+  }
+  printInstancePassword(instanceId)
+  getInstanceDetails(instanceId)
 }
 
 module.exports.main = main

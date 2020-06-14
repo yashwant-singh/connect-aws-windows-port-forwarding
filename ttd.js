@@ -1,18 +1,18 @@
 #!/usr/bin/env node
-const { exec } = require('child_process');
+const {promisify} = require('util');
+const {exec} = require('child_process');
+const execAsync = promisify(exec);
 const AWS = require('aws-sdk'); 
 const fs = require('fs')
 const ursa = require('ursa');
 const prompt = require('prompt-sync')();
 AWS.config.update({region: 'us-west-2'}); 
 
-const credentials = new AWS.SharedIniFileCredentials({profile: 'ttd-rsa'});
-AWS.config.credentials = credentials;
 /*
 
 */
 const getInstanceDetails = instanceId => {
-  const ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
+  const ec2 = new AWS.EC2({apiVersion: 'latest'});
   const instanceDet = ec2.describeInstances({InstanceIds: [instanceId]}).promise()
   instanceDet.then(
   function(data) { 
@@ -34,9 +34,9 @@ const getInstanceDetails = instanceId => {
 
 const printInstancePassword = instanceId => {
   try {
-    const pem = fs.readFileSync(process.env.IBP_100);
+    const pem = fs.readFileSync(process.env.TTD_PEM_FILE);
     const pkey = ursa.createPrivateKey(pem);
-    const ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
+    const ec2 = new AWS.EC2({apiVersion: 'latest'});
     ec2.getPasswordData({InstanceId: instanceId}, (err, data)=> {
       if(err) {
         console.log("Error :"+ err) 
@@ -70,7 +70,7 @@ const do_port_forwarding = (ip) => {
     }
   });
 }
-const getAWSToken = () => {
+const getAWSToken = async () => {
   console.log("Generating IBP-100 AWS temp credential...")
   // exec('eiamCli getAWSTempCredentials -a 733536204770 -r WindowsUsers -p ibp-100', (err, stdout, stderr) => {
   //   exec('awstoken 1', (err, stdout, stderr) => {
@@ -83,7 +83,7 @@ const getAWSToken = () => {
   //    console.log(`stderr: ${stderr}`);
   //   }
   // });
-  const {err, stdout, stderr}  = await execAsync('awstoken 2')
+  const {err, stdout, stderr}  = await execAsync('awstoken 1')
   console.log(err)
   console.log(stdout)
   console.log(stderr)
@@ -91,18 +91,21 @@ const getAWSToken = () => {
 }
 
 const main = () =>{
-    console.log("Connecting DesktopTools AWS Account.... ")
-    const isToken = prompt("Hit Enter for No. Do you want to generate token?[Y]")
-    if(isToken && isToken.toUpperCase() === "Y") {
-      getAWSToken()
-    }
-    const instanceId = prompt('Enter Instance ID:?');
-    console.log("INSTANCE_ID: "+ instanceId)
-    if(!instanceId) {
-      console.log("Please enter the Instance Id!")
-    }
-    printInstancePassword(instanceId)
-    getInstanceDetails(instanceId)
+  process.env.AWS_PROFILE='ttd-rsa'
+  console.log("Connecting DesktopTools AWS Account.... ")
+  const isToken = prompt("Hit Enter for No. Do you want to generate token?[Y]")
+  if(isToken && isToken.toUpperCase() === "Y") {
+    getAWSToken()
+  }
+    // const credentials = new AWS.SharedIniFileCredentials({profile: 'ttd-rsa'});
+    // AWS.config.credentials = credentials;
+  const instanceId = prompt('Enter Instance ID :');
+  console.log("INSTANCE_ID: "+ instanceId)
+  if(!instanceId) {
+    console.log("Please enter the Instance Id!")
+  }
+  printInstancePassword(instanceId)
+  getInstanceDetails(instanceId)
 }
 
 module.exports.main = main
