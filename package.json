@@ -1,0 +1,21 @@
+{
+  "name": "connect-winjs",
+  "version": "1.0.0",
+  "description": "",
+  "bin": "./index.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "~2.696.0",
+    "http-server": "~0.12.3",
+    "node-rsa": "~1.0.8",
+    "node-ssh-forward": "~0.7.2",
+    "prompt-sync": "~4.2.0",
+    "request": "~2.88.2",
+    "ursa": "~0.9.4"
+  }
+}
