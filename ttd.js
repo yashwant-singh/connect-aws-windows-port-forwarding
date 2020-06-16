@@ -6,7 +6,10 @@ const AWS = require('aws-sdk');
 const fs = require('fs')
 const ursa = require('ursa');
 const prompt = require('prompt-sync')();
-AWS.config.update({region: 'us-west-2'}); 
+AWS.config.update({
+  region: 'us-west-2',
+  credentials: new AWS.SharedIniFileCredentials({profile: 'ttd-rsa'})
+});
 
 /*
 
@@ -33,6 +36,7 @@ const getInstanceDetails = instanceId => {
 }
 
 const printInstancePassword = instanceId => {
+  console.log("Getting password for Instance Id :"+instanceId)
   try {
     const pem = fs.readFileSync(process.env.TTD_PEM_FILE);
     const pkey = ursa.createPrivateKey(pem);
@@ -55,7 +59,7 @@ const printInstancePassword = instanceId => {
 }
 
 const do_port_forwarding = (ip) => {
-  const connStr = 'ssh ibp-100 -L 1799:'+ip +':799';
+  const connStr = 'ssh ttd -L 3389:'+ip +':799';
   console.log("Connecting :"+ connStr)
   exec(connStr, (err, stdout, stderr) => {
     if (err) {
@@ -93,6 +97,7 @@ const getAWSToken = async () => {
 const main = () =>{
   process.env.AWS_PROFILE='ttd-rsa'
   console.log("Connecting DesktopTools AWS Account.... ")
+  
   const isToken = prompt("Hit Enter for No. Do you want to generate token?[Y]")
   if(isToken && isToken.toUpperCase() === "Y") {
     getAWSToken()
@@ -108,4 +113,10 @@ const main = () =>{
   getInstanceDetails(instanceId)
 }
 
-module.exports.main = main
+module.exports = {
+  main,
+  getAWSToken,
+  printInstancePassword,
+  getInstanceDetails
+
+}

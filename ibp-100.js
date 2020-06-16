@@ -9,8 +9,8 @@ const execAsync = promisify(exec);
 const prompt = require('prompt-sync')({sigint: true});
 
 AWS.config.update({
-  region: 'us-west-2'
-  // credentials: new AWS.SharedIniFileCredentials({profile: 'id_rsa_olympus'})
+  region: 'us-west-2',
+  credentials: new AWS.SharedIniFileCredentials({profile: 'id_rsa_olympus'})
 });
 
 
@@ -117,4 +117,9 @@ const main = () => {
   getInstanceDetails(instanceId)
 }
 
-module.exports.main = main
+module.exports = {
+  main,
+  getAWSToken,
+  printInstancePassword,
+  getInstanceDetails
+}
